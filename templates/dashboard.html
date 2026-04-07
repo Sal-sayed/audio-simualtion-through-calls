@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { background: #0f172a; min-height: 100vh; display: block; }
+    h1   { color: #fff; margin-bottom: 24px; font-size: 26px; }
+    a.back { color: #68d391; font-size: 14px; display: inline-block; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <a class="back" href="/">← Back to Call Page</a>
+    <h1>📊 Campaign Analytics</h1>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num">{{ total }}</div>
+        <div class="lbl">Total Contacts</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ clicked }}</div>
+        <div class="lbl">Link Clicked</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">{{ audio_played }}</div>
+        <div class="lbl">Audio Played</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">
+          {% if total > 0 %}{{ ((audio_played / total) * 100) | round(1) }}%{% else %}0%{% endif %}
+        </div>
+        <div class="lbl">Completion Rate</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Clicked</th>
+          <th>Audio Played</th>
+          <th>Visited At</th>
+          <th>Audio At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.name or "—" }}</td>
+          <td>{{ row.phone }}</td>
+          <td><span class="badge {{ 'yes' if row.clicked else 'no' }}">{{ 'Yes' if row.clicked else 'No' }}</span></td>
+          <td><span class="badge {{ 'yes' if row.audio_played else 'no' }}">{{ 'Yes' if row.audio_played else 'No' }}</span></td>
+          <td>{{ row.visited_at }}</td>
+          <td>{{ row.audio_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

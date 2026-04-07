@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Incoming Call</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- ── INCOMING CALL SCREEN ──────────────────────────────────────── -->
+  <div class="call-screen" id="callScreen">
+
+    <div class="caller-info">
+      <div class="avatar">📞</div>
+      <p class="caller-label">Incoming Call</p>
+      <h1 class="caller-name">Awareness Campaign</h1>
+      <p class="caller-sub">Government Health Initiative</p>
+    </div>
+
+    <div class="ring-animation">
+      <span></span><span></span><span></span>
+    </div>
+
+    <p class="user-greeting" id="greeting">
+      Hello {{ name }} 👋 — tap to answer
+    </p>
+
+    <div class="call-actions">
+      <button class="btn-decline" onclick="declineCall()">
+        <span>&#10006;</span>
+        <small>Decline</small>
+      </button>
+      <button class="btn-accept" id="acceptBtn" onclick="acceptCall()">
+        <span>&#128222;</span>
+        <small>Answer</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ACTIVE CALL SCREEN ─────────────────────────────────────────── -->
+  <div class="active-screen hidden" id="activeScreen">
+
+    <div class="active-header">
+      <p class="active-label">Connected</p>
+      <div class="avatar large">📢</div>
+      <h2>Awareness Message</h2>
+      <p id="timerDisplay" class="timer">00:00</p>
+    </div>
+
+    <div class="audio-visual" id="audioVisual">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <p class="message-hint">🔊 Turn up your volume</p>
+
+    <audio id="awareness-audio" preload="auto">
+      <source src="/static/audio/message.mp3" type="audio/mpeg" />
+      <source src="/static/audio/message.ogg" type="audio/ogg" />
+      Your browser does not support audio.
+    </audio>
+
+    <div class="active-actions">
+      <button class="btn-end" onclick="endCall()">
+        <span>&#128222;</span>
+        <small>End Call</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── ENDED SCREEN ───────────────────────────────────────────────── -->
+  <div class="ended-screen hidden" id="endedScreen">
+    <div class="ended-icon">✅</div>
+    <h2>Call Ended</h2>
+    <p>Thank you for listening to the awareness message.</p>
+    <p class="share-hint">📢 Share this with your family and friends!</p>
+  </div>
+
+  <script>
+    const USER_ID = "{{ user_id }}";
+    let timerInterval = null;
+    let seconds = 0;
+
+    function acceptCall() {
+      document.getElementById("callScreen").classList.add("hidden");
+      document.getElementById("activeScreen").classList.remove("hidden");
+
+      const audio = document.getElementById("awareness-audio");
+      const visual = document.getElementById("audioVisual");
+
+      audio.play().then(() => {
+        visual.classList.add("playing");
+        startTimer();
+        sendTrack("audio_played");
+      }).catch(() => {
+        // Autoplay blocked on some browsers — show tap-to-play
+        document.querySelector(".message-hint").textContent =
+          "▶ Tap here to play message";
+        document.querySelector(".message-hint").style.cursor = "pointer";
+        document.querySelector(".message-hint").onclick = () => {
+          audio.play();
+          visual.classList.add("playing");
+          startTimer();
+          sendTrack("audio_played");
+        };
+      });
+
+      audio.onended = () => {
+        visual.classList.remove("playing");
+        clearInterval(timerInterval);
+      };
+    }
+
+    function declineCall() {
+      document.getElementById("callScreen").classList.add("hidden");
+      document.getElementById("endedScreen").classList.remove("hidden");
+    }
+
+    function endCall() {
+      const audio = document.getElementById("awareness-audio");
+      audio.pause();
+      clearInterval(timerInterval);
+      document.getElementById("activeScreen").classList.add("hidden");
+      document.getElementById("endedScreen").classList.remove("hidden");
+    }
+
+    function startTimer() {
+      seconds = 0;
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const s = String(seconds % 60).padStart(2, "0");
+        document.getElementById("timerDisplay").textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function sendTrack(event) {
+      fetch("/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: USER_ID, event: event }),
+      });
+    }
+  </script>
+</body>
+</html>
